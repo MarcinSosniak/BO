@@ -1,5 +1,10 @@
 from enum import  Enum
 import random
+import time
+from multiprocessing import Process
+
+
+from drawer import Drawer
 
 class Direction(Enum):
     UP = 0
@@ -48,6 +53,9 @@ class Point:
 class Labirinth:
     def __init__(self):
         self._labirynth= []
+
+    def get_lab(self): 
+        return self._labirynth
 
     def read_from_file(self,filename):
         self._labirynth = []
@@ -200,5 +208,6 @@ if __name__=="__main__":
     ant_colony = AntColony(lab,ants_count=20)
     ant_colony.stepts(1000)
     lab.print_scale()
-
+    p = Process(target=Drawer.draw, args=(lab,))
+    p.start()
 
