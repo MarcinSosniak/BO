@@ -2,6 +2,8 @@ from enum import Enum
 import random
 import time
 from multiprocessing import Process
+import numpy as np
+from numpy.random import choice as np_choice
 
 
 from drawer import Drawer
@@ -83,14 +85,17 @@ class Labirinth:
                     line.append(str(elem))
             print(''.join(line))
 
-    def print_scale(self):
+    def find_max_pheromon(self):
         max = 0
         for row in self._labirynth:
             for elem in row:
                 if elem is not None:
                     if elem > max:
                         max = elem
+        return max
 
+    def print_scale(self):
+        max = self.find_max_pheromon()
         for row in self._labirynth:
             line = []
             for elem in row:
@@ -116,6 +121,22 @@ class Labirinth:
             out.append(Direction.LEFT)
         return out
 
+    def neigbour_fields(self, pos):
+        out = []
+        posUP = pos.addDirection(Direction.UP)
+        if self._labirynth[posUP.y()][posUP.x()] is not None:
+            out.append(posUP)
+        posRIGHT = pos.addDirection(Direction.RIGHT)
+        if self._labirynth[posRIGHT.y()][posRIGHT.x()] is not None:
+            out.append(posRIGHT)
+        posDOWN = pos.addDirection(Direction.DOWN)
+        if self._labirynth[posDOWN.y()][posDOWN.x()] is not None:
+            out.append(posDOWN)
+        posLEFT = pos.addDirection(Direction.LEFT)
+        if self._labirynth[posLEFT.y()][posLEFT.x()] is not None:
+            out.append(posLEFT)
+        return out
+
     def add_pheromone(self, pos):
         self._labirynth[pos.y()][pos.x()] += Cfg.get_instance().pheromone_add
 
@@ -138,6 +159,7 @@ class Cfg:
     def get_instance():
         return Cfg._instance
 
+
 class Ant:
     def __init__(self, labirynth):
         self._path = []
@@ -159,9 +181,7 @@ class Ant:
             self._fsearch = False
 
     def _move_search(self):
-        dirs = self._labirynth.dir_list(self._pos)
-        dirNr = random.randint(0, len(dirs)-1)
-        self._move_dir(dirs[dirNr])
+        self._move_dir(self._chose_path())
 
     def _move_back(self):
         if self._pos == Cfg.get_instance().anthill_pos:
@@ -173,6 +193,15 @@ class Ant:
 
     def print_pos(self):
         print(str(self._pos))
+
+    def _chose_path(self):
+        dirs = self._labirynth.dir_list(self._pos)
+        neigbour_fields = self._labirynth.neigbour_fields(self._pos)
+        neigbour_fields_probability = [((self._labirynth._labirynth[pos.y()][pos.x(
+        )]+1))/(self._labirynth.find_max_pheromon()+1) for pos in neigbour_fields]
+        neigbour_fields_probability_with_adjusted_p = [
+            prob/sum(neigbour_fields_probability) for prob in neigbour_fields_probability]
+        return np_choice(dirs, p=neigbour_fields_probability_with_adjusted_p)
 
 
 class AntColony:
