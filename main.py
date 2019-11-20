@@ -5,6 +5,18 @@ from multiprocessing import Process
 import numpy as np
 from numpy.random import choice as np_choice
 import _thread
+import argparse
+
+parser = argparse.ArgumentParser(description='find way in labirynth !')
+parser.add_argument('-x1',dest='x1', default=1, type=int, help='x coordinate of first point')
+parser.add_argument('-y1',dest='y1', default=1, type=int, help='y coordinate of first point')
+parser.add_argument('-x2',dest='x2', default=14, type=int, help='x coordinate of second  point')
+parser.add_argument('-y2',dest='y2', default=14, type=int, help='y coordinate of second point')
+parser.add_argument('-ps',dest='pheromone_start', type=float, default=0, help='starting level of pheromone')
+parser.add_argument('-pe',dest='pheromone_evaporation', type=float, default=2.0, help='how much pheromone evaportes with each step')
+parser.add_argument('-pa',dest='pheromone_ad', type=float, default=100., help='how much pheromone add with each step')
+parser.add_argument('-f',dest='file_name', type=str, default='')
+
 
 from drawer import Drawer
 
