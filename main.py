@@ -6,6 +6,7 @@ import numpy as np
 from numpy.random import choice as np_choice
 import _thread
 import argparse
+import sys
 
 parser = argparse.ArgumentParser(description='find way in labirynth !')
 parser.add_argument('-x1', dest='x1', default=1, type=int, help='x coordinate of first point')
@@ -18,6 +19,7 @@ parser.add_argument('-pa', dest='pheromone_add', type=float, default=10., help='
 parser.add_argument('-pm', dest ='pheromone_max',type=float,default=1000., help='maximum level of pheromone')
 parser.add_argument('-a', dest='ant_count', type=int,default=10, help='number of ants')
 parser.add_argument('-f', dest='file_name', type=str, default="exampleLab.txt", help='file with labriynth')
+parser.add_argument('-ff',action='store_true', dest='skip_sleep',default=False, help='skip waits, much faster counting, unable to watch properly')
 args= parser.parse_args()
 
 from drawer import Drawer
@@ -262,10 +264,15 @@ if __name__ == "__main__":
     lab.read_from_file(args.file_name)
     ant_colony = AntColony(lab, ants_count=args.ant_count)
     _thread.start_new_thread(Drawer.draw, (lab, Cfg.get_instance()))
-    time.sleep(1)
+    if not args.skip_sleep:
+        time.sleep(1)
+
+    max_steps= 1000
     for i in range(0, 1000):
         ant_colony.stepts(500)
-        time.sleep(0.1)
+        if not args.skip_sleep:
+            time.sleep(0.1)
     pause_on_input= "d"
     print("done")
     input(pause_on_input)
+    sys.exit()
