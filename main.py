@@ -4,7 +4,7 @@ import time
 from multiprocessing import Process
 import numpy as np
 from numpy.random import choice as np_choice
-
+import _thread
 
 from drawer import Drawer
 
@@ -144,7 +144,7 @@ class Labirinth:
 class Cfg:
     _instance = None
 
-    def __init__(self, anthill_pos, target_pos, pheromone_add=100., pheromone_evaporation_amount=1.0, pheromone_start_level=0):
+    def __init__(self, anthill_pos, target_pos, pheromone_add=100., pheromone_evaporation_amount=2.0, pheromone_start_level=0):
         self.anthill_pos = anthill_pos
         self.target_pos = target_pos
         self.pheromone_add = pheromone_add
@@ -215,6 +215,13 @@ class AntColony:
             ant.move()
             # ant.print_pos()
             # print(ant._path)
+        for row in self._labirynth.get_lab():
+            for element in row:
+                if element is not None:
+                    if element > Cfg.get_instance().pheromone_evaporation_amount:
+                        element -= Cfg.get_instance().pheromone_evaporation_amount
+                    else:
+                        element=0
 
     def stepts(self, n):
         for i in range(n):
@@ -226,7 +233,7 @@ class AntColony:
 
 
 if __name__ == "__main__":
-    Cfg.set_instance(Cfg(Point(1, 1), Point(2, 2)))
+    Cfg.set_instance(Cfg(Point(1, 1), Point(14, 14)))
     lab = Labirinth()
     lab.read_from_file("exampleLab.txt")
     lab.print()
@@ -234,7 +241,9 @@ if __name__ == "__main__":
     print("")
     print("")
     ant_colony = AntColony(lab, ants_count=20)
-    ant_colony.stepts(1000)
-    lab.print_scale()
-    p = Process(target=Drawer.draw, args=(lab,))
-    p.start()
+    _thread.start_new_thread(Drawer.draw,(lab,Cfg.get_instance()))
+    while True:
+        # time.sleep(0.1)
+        ant_colony.stepts(50000000)
+
+
