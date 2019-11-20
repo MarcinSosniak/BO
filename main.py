@@ -22,7 +22,12 @@ parser.add_argument('-f', dest='file_name', type=str, default="exampleLab.txt", 
 parser.add_argument('-ff',action='store_true', dest='skip_sleep',default=False, help='skip waits, much faster counting, unable to watch properly')
 args= parser.parse_args()
 
+
 from drawer import Drawer
+
+best_path_this_round = -1
+
+global_min_path  = []
 
 
 class Direction(Enum):
@@ -75,6 +80,9 @@ class Point:
 class Labirinth:
     def __init__(self):
         self._labirynth = []
+
+    def save_response(self,filename):
+        pass
 
     def get_lab(self):
         return self._labirynth
@@ -157,6 +165,28 @@ class Labirinth:
         self._labirynth[pos.y()][pos.x()] = min(self._labirynth[pos.y()][pos.x(
         )] + Cfg.get_instance().pheromone_add, Cfg.get_instance().pheromon_max)
 
+    def neigbour_fields_tuple_version(self, tuples_x_y):
+        out = []
+        if self._labirynth[tuples_x_y[0]+1][tuples_x_y[1]] is not None:
+            out.append((tuples_x_y[0]+1, tuples_x_y[1]))
+        if self._labirynth[tuples_x_y[0]][tuples_x_y[1]+1] is not None:
+            out.append((tuples_x_y[0], tuples_x_y[1]+1))
+        if self._labirynth[tuples_x_y[0]-1][tuples_x_y[1]] is not None:
+            out.append((tuples_x_y[0]-1, tuples_x_y[1]))
+        if self._labirynth[tuples_x_y[0]][tuples_x_y[1]-1] is not None:
+            out.append((tuples_x_y[0], tuples_x_y[1]-1))
+        return out
+
+    def bfs_paths(self, start, goal):
+        queue = [(start, [start])]
+        while queue:
+            (vertex, path) = queue.pop(0)
+            for next in set(self.neigbour_fields_tuple_version((vertex[0], vertex[1]))) - set(path):
+                if next == goal:
+                    yield path + [next]
+                else:
+                    queue.append((next, path + [next]))
+
 
 class Cfg:
     _instance = None
@@ -187,6 +217,8 @@ class Ant:
         self._fsearch = True
 
     def move(self):
+        if self._pos ==Cfg.get_instance().anthill_pos:
+            self._path=[]
         if self._fsearch:
             return self._move_search()
         else:
@@ -200,6 +232,12 @@ class Ant:
         self._visted_places.add((self._pos.x(), self._pos.y()))
 
         if self._pos == Cfg.get_instance().target_pos:
+            global best_path_this_round
+            if best_path_this_round > len(self._path) or best_path_this_round<0:
+                best_path_this_round = len(self._path)
+            global global_min_path
+            if len(global_min_path) ==0 or len(global_min_path) > len(self._path):
+                global_min_path = list(self._path)
             self._fsearch = False
 
     def _move_search(self):
@@ -238,6 +276,7 @@ class AntColony:
     def step(self):
         for ant in self._ants:
             ant.move()
+        global best_path_this_round
             # ant.print_pos()
             # print(ant._path)
         for row in self._labirynth.get_lab():
@@ -256,6 +295,9 @@ class AntColony:
         for ant in self._ants:
             ant.print_pos()
 
+def clearGlobal():
+    global global_min_path
+    global_min_path=[]
 
 if __name__ == "__main__":
     Cfg.set_instance(Cfg(Point(args.x1, args.y1), Point(args.x2, args.y2),pheromone_add=args.pheromone_add,
@@ -266,12 +308,23 @@ if __name__ == "__main__":
     _thread.start_new_thread(Drawer.draw, (lab, Cfg.get_instance()))
     if not args.skip_sleep:
         time.sleep(1)
+    bfs_ideal_path = next(lab.bfs_paths((1, 1), (14, 14)))
+    bfs_ideal_path_len = len(next(lab.bfs_paths((1, 1), (14, 14))))
+    print(bfs_ideal_path_len)
+
 
     max_steps= 1000
-    for i in range(0, 1000):
-        ant_colony.stepts(500)
+    min_path_len=10000000000000000000
+    for i in range(0, 2000):
+        ant_colony.stepts(2000)
         if not args.skip_sleep:
-            time.sleep(0.1)
+            # time.sleep(0.1)
+            pass
+        if True:
+            print("len: "+str(len(global_min_path)))
+            min_path_len=len(global_min_path)
+        clearGlobal()
+
     pause_on_input= "d"
     print("done")
     input(pause_on_input)
