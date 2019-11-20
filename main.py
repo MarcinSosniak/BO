@@ -8,15 +8,17 @@ import _thread
 import argparse
 
 parser = argparse.ArgumentParser(description='find way in labirynth !')
-parser.add_argument('-x1',dest='x1', default=1, type=int, help='x coordinate of first point')
-parser.add_argument('-y1',dest='y1', default=1, type=int, help='y coordinate of first point')
-parser.add_argument('-x2',dest='x2', default=14, type=int, help='x coordinate of second  point')
-parser.add_argument('-y2',dest='y2', default=14, type=int, help='y coordinate of second point')
-parser.add_argument('-ps',dest='pheromone_start', type=float, default=0, help='starting level of pheromone')
-parser.add_argument('-pe',dest='pheromone_evaporation', type=float, default=2.0, help='how much pheromone evaportes with each step')
-parser.add_argument('-pa',dest='pheromone_ad', type=float, default=100., help='how much pheromone add with each step')
-parser.add_argument('-f',dest='file_name', type=str, default='')
-
+parser.add_argument('-x1', dest='x1', default=1, type=int, help='x coordinate of first point')
+parser.add_argument('-y1', dest='y1', default=1, type=int, help='y coordinate of first point')
+parser.add_argument('-x2', dest='x2', default=14, type=int, help='x coordinate of second  point')
+parser.add_argument('-y2', dest='y2', default=14, type=int, help='y coordinate of second point')
+parser.add_argument('-ps', dest='pheromone_start', type=float, default=0, help='starting level of pheromone')
+parser.add_argument('-pe', dest='pheromone_evaporation', type=float, default=80.0, help='how much pheromone evaportes with each step in percent')
+parser.add_argument('-pa', dest='pheromone_add', type=float, default=10., help='how much pheromone add with each step')
+parser.add_argument('-pm', dest ='pheromone_max',type=float,default=1000., help='maximum level of pheromone')
+parser.add_argument('-a', dest='ant_count', type=int,default=10, help='number of ants')
+parser.add_argument('-f', dest='file_name', type=str, default="exampleLab.txt", help='file with labriynth')
+args= parser.parse_args()
 
 from drawer import Drawer
 
@@ -254,14 +256,16 @@ class AntColony:
 
 
 if __name__ == "__main__":
-    Cfg.set_instance(Cfg(Point(1, 1), Point(14, 14)))
+    Cfg.set_instance(Cfg(Point(args.x1, args.y1), Point(args.x2, args.y2),pheromone_add=args.pheromone_add,
+                     pheromone_procent_evaporation_amount=args.pheromone_evaporation, pheromone_start_level=args.pheromone_start, pheromon_max=args.pheromone_max))
     lab = Labirinth()
-    lab.read_from_file("exampleLab.txt")
-    ant_colony = AntColony(lab, ants_count=10)
+    lab.read_from_file(args.file_name)
+    ant_colony = AntColony(lab, ants_count=args.ant_count)
     _thread.start_new_thread(Drawer.draw, (lab, Cfg.get_instance()))
+    time.sleep(1)
     for i in range(0, 1000):
         ant_colony.stepts(500)
-        time.sleep(0.01)
+        time.sleep(0.1)
     pause_on_input= "d"
     print("done")
     input(pause_on_input)
