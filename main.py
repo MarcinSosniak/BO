@@ -150,17 +150,19 @@ class Labirinth:
         return out
 
     def add_pheromone(self, pos):
-        self._labirynth[pos.y()][pos.x()] += Cfg.get_instance().pheromone_add
+        self._labirynth[pos.y()][pos.x()] = min(self._labirynth[pos.y()][pos.x(
+        )] + Cfg.get_instance().pheromone_add, Cfg.get_instance().pheromon_max)
 
 
 class Cfg:
     _instance = None
 
-    def __init__(self, anthill_pos, target_pos, pheromone_add=100., pheromone_evaporation_amount=2.0, pheromone_start_level=0):
+    def __init__(self, anthill_pos, target_pos, pheromone_add=10, pheromone_procent_evaporation_amount=80, pheromone_start_level=0, pheromon_max=1000):
         self.anthill_pos = anthill_pos
         self.target_pos = target_pos
         self.pheromone_add = pheromone_add
-        self.pheromone_evaporation_amount = pheromone_evaporation_amount
+        self.pheromon_max = pheromon_max
+        self.pheromone__procent_evaporation_amount = pheromone_procent_evaporation_amount
         self.pheromone_start_level = pheromone_start_level
 
     @staticmethod
@@ -175,6 +177,7 @@ class Cfg:
 class Ant:
     def __init__(self, labirynth):
         self._path = []
+        self._visted_places = set()
         self._labirynth = labirynth
         self._pos = Cfg.get_instance().anthill_pos
         self._fsearch = True
@@ -189,6 +192,9 @@ class Ant:
         if self._fsearch:
             self._path.append(Direction.opposite(direction))
         self._pos = self._pos.addDirection(direction)
+        # print((self._pos.x(), self._pos.y()))
+        self._visted_places.add((self._pos.x(), self._pos.y()))
+
         if self._pos == Cfg.get_instance().target_pos:
             self._fsearch = False
 
@@ -199,9 +205,12 @@ class Ant:
         if self._pos == Cfg.get_instance().anthill_pos:
             self._fsearch = True
             return self.move()
-        self._labirynth.add_pheromone(self._pos)
         self._move_dir(self._path[-1])
         self._path = self._path[:-1]
+
+        if (self._pos.x(), self._pos.y()) in self._visted_places:
+            self._labirynth.add_pheromone(self._pos)
+            self._visted_places.remove((self._pos.x(), self._pos.y()))
 
     def print_pos(self):
         print(str(self._pos))
@@ -217,7 +226,7 @@ class Ant:
 
 
 class AntColony:
-    def __init__(self, labirynth, ants_count=15):
+    def __init__(self, labirynth, ants_count=3):
         self._ants_count = ants_count
         self._labirynth = labirynth
         self._ants = [Ant(self._labirynth) for i in range(ants_count)]
@@ -230,10 +239,10 @@ class AntColony:
         for row in self._labirynth.get_lab():
             for element in row:
                 if element is not None:
-                    if element > Cfg.get_instance().pheromone_evaporation_amount:
-                        element -= Cfg.get_instance().pheromone_evaporation_amount
+                    if element > 1:
+                        element -= element * Cfg.get_instance().pheromone__procent_evaporation_amount/100
                     else:
-                        element=0
+                        element = 0
 
     def stepts(self, n):
         for i in range(n):
@@ -248,14 +257,11 @@ if __name__ == "__main__":
     Cfg.set_instance(Cfg(Point(1, 1), Point(14, 14)))
     lab = Labirinth()
     lab.read_from_file("exampleLab.txt")
-    lab.print()
-    print("")
-    print("")
-    print("")
-    ant_colony = AntColony(lab, ants_count=20)
-    _thread.start_new_thread(Drawer.draw,(lab,Cfg.get_instance()))
-    while True:
-        # time.sleep(0.1)
-        ant_colony.stepts(50000000)
-
-
+    ant_colony = AntColony(lab, ants_count=10)
+    _thread.start_new_thread(Drawer.draw, (lab, Cfg.get_instance()))
+    for i in range(0, 1000):
+        ant_colony.stepts(500)
+        time.sleep(0.01)
+    pause_on_input= "d"
+    print("done")
+    input(pause_on_input)
