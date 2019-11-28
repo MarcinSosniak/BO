@@ -14,7 +14,7 @@ parser.add_argument('-y1', dest='y1', default=1, type=int, help='y coordinate of
 parser.add_argument('-x2', dest='x2', default=14, type=int, help='x coordinate of second  point')
 parser.add_argument('-y2', dest='y2', default=14, type=int, help='y coordinate of second point')
 parser.add_argument('-ps', dest='pheromone_start', type=float, default=0, help='starting level of pheromone')
-parser.add_argument('-pe', dest='pheromone_evaporation', type=float, default=80.0, help='how much pheromone evaportes with each step in percent')
+parser.add_argument('-pe', dest='pheromone_evaporation', type=float, default=20.0, help='how much pheromone evaportes with each step in percent')
 parser.add_argument('-pa', dest='pheromone_add', type=float, default=10., help='how much pheromone add with each step')
 parser.add_argument('-pm', dest ='pheromone_max',type=float,default=1000., help='maximum level of pheromone')
 parser.add_argument('-a', dest='ant_count', type=int,default=10, help='number of ants')
@@ -321,7 +321,7 @@ if __name__ == "__main__":
             # time.sleep(0.1)
             pass
         if True:
-            print("len: "+str(len(global_min_path)))
+            print("len: "+str(len(global_min_path))+ "path: "+str(global_min_path))
             min_path_len=len(global_min_path)
         clearGlobal()
 
